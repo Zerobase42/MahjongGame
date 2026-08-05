@@ -21,13 +21,16 @@ namespace mahjong{
         KAN,//대밍깡
         INK,//안깡
         SKN,//소밍깡
-        HEAD//머리
+        HEAD,//머리
+        SHUN,//슌쯔
+        KOUT,//커쯔
     };
     enum class WGet:unsigned char{
         LEFT,
         OPPOSITE,
         RIGHT,
-        SELF
+        // ^ 치퐁깡
+        SELF// 안깡, 내가 만든 슌쯔, 커쯔
     };
     struct Meld{
         Tile card;
@@ -36,7 +39,7 @@ namespace mahjong{
     };
     struct Hand{
         Tile card[15];// 손패
-        Meld melds[PAIR_MAX]; // 치퐁깡 모아놓은거
+        Meld melds[PAIR_MAX]; // 치퐁깡 모아놓은거. 회료시 확인
         int meldCnt; // 치퐁깡 개수
     };
 }//namespace majong

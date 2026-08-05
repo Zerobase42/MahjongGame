@@ -8,6 +8,16 @@
 #include "mahjong.hpp"
 
 class Player {
+   public:// 기본 선언 값
+    mahjong::Hand handCard;
+    mahjong::Tile winTile{};         // 대기->화료패
+    bool tsumo = false;              // 쯔모/론
+    bool menzen = true;              // 멘젠 확인 -> 치퐁깡 넣을때 false로 바꾸기
+    mahjong::Tile seatWind{};        // 자리풍
+    mahjong::Tile roundWind{};       // 본국 풍
+    unsigned long long YOKU = 0;     // 가능한 역 비트마스킹
+    unsigned long long YOKUMAN = 0;  // 가능한 역만 비트마스킹
+
    public:
     Player() = default;
     ~Player() = default;
@@ -16,7 +26,7 @@ class Player {
     void setScore(int score);
     int getScore() const;
 
-   private:
+  private:
     static constexpr char priority[34] = {
         28,
         1, 2, 3, 4, 5, 6, 7, 8, 9, 29,
@@ -24,9 +34,10 @@ class Player {
         19, 20, 21, 22, 23, 24, 25, 26, 27, 31,
         32, 33, 34
     };
-    void PrioritySort() {
+    void PrioritySort() { // 우선순위 정렬 -> 만 통 삭 바람패 삼원패 순으로 정렬
         std::sort(handCard.card, handCard.card + 14,
                   [this](mahjong::Tile a, mahjong::Tile b) {
+                      if(a==255||b==255)return a<b;
                       return priority[a] < priority[b];
                   });
     }
@@ -48,16 +59,6 @@ class Player {
         handCard.card[13] = card;
         PrioritySort();
     }
-
-   public:
-    mahjong::Hand handCard;
-    mahjong::Tile winTile{};         // 대기->화료패
-    bool tsumo = false;              // 쯔모/론
-    bool menzen = true;              // 멘젠 확인 -> 치퐁깡 넣을때 false로 바꾸기
-    mahjong::Tile seatWind{};        // 자리풍
-    mahjong::Tile roundWind{};       // 본국 풍
-    unsigned long long YOKU = 0;     // 가능한 역 비트마스킹
-    unsigned long long YOKUMAN = 0;  // 가능한 역만 비트마스킹
 
    private:
     void calcYoku() const {
