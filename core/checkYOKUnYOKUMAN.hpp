@@ -1,7 +1,6 @@
 #ifndef CHECKYOKUNYOKUMAN_HPP
 #define CHECKYOKUNYOKUMAN_HPP
 #include "mahjong.hpp"
-#include "player.hpp"
 
 // 치또이츠 : 머리가 7개.
 bool isChiitoitsu(const mahjong::Tile handCard[15]) {  // 치또이츠 판별

@@ -15,8 +15,8 @@ class Player {
     bool menzen = true;              // 멘젠 확인 -> 치퐁깡 넣을때 false로 바꾸기
     mahjong::Tile seatWind{};        // 자리풍
     mahjong::Tile roundWind{};       // 본국 풍
-    unsigned long long YOKU = 0;     // 가능한 역 비트마스킹
-    unsigned long long YOKUMAN = 0;  // 가능한 역만 비트마스킹
+    unsigned int YOKU = 0;     // 가능한 역 비트마스킹
+    unsigned int YOKUMAN = 0;  // 가능한 역만 비트마스킹
 
    public:
     Player() = default;
@@ -70,7 +70,7 @@ class Player {
     int calcFu() const {
         int score = 20;                     // 기본 20부 시작
         // 기저사례 처리
-        if (isPinfu() && tsumo)             // 핑후면 20부 고정
+        if (tsumo&&isPinfu(handCard.card))             // 핑후면 20부 고정
             return 20;
         if (isChiitoitsu(handCard.card))    // 치또이쯔면 25부 시작
             return 25 ;
