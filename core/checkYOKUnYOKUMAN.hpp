@@ -1,8 +1,9 @@
 #pragma once
 #ifndef CHECKYOKUNYOKUMAN_HPP
 #define CHECKYOKUNYOKUMAN_HPP
-#include "mahjong.hpp"
+
 #include <algorithm>
+#include "mahjong.hpp"
 
 namespace yoku{
     // 치또이츠 : 머리가 7개.

@@ -2,10 +2,10 @@
 #ifndef PLAYER_HPP
 #define PLAYER_HPP
 
-#include <algorithm>// sort
+#include <algorithm>  // sort
 
 #include "checkYOKUnYOKUMAN.hpp"
-#include "mahjong.hpp" // 무시
+#include "mahjong.hpp"
 
 class Player {
    public:// 기본 선언 값
@@ -14,7 +14,6 @@ class Player {
     bool tsumo = false;              // 쯔모/론
     bool menzen = true;              // 멘젠 확인 -> 치퐁깡 넣을때 false로 바꾸기
    
-    
     unsigned int YOKU = 0;     // 가능한 역 비트마스킹
     unsigned int YOKUMAN = 0;  // 가능한 역만 비트마스킹
 
