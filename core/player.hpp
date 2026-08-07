@@ -2,10 +2,10 @@
 #ifndef PLAYER_HPP
 #define PLAYER_HPP
 
-#include <algorithm>
+#include <algorithm>// sort
 
 #include "checkYOKUnYOKUMAN.hpp"
-#include "mahjong.hpp"
+#include "mahjong.hpp" // 무시
 
 class Player {
    public:// 기본 선언 값
@@ -70,9 +70,9 @@ class Player {
     int calcFu() const {
         int score = 20;                     // 기본 20부 시작
         // 기저사례 처리
-        if (tsumo&&isPinfu(handCard.card))             // 핑후면 20부 고정
+        if (tsumo&&yoku::isPinfu(handCard.card))             // 핑후면 20부 고정
             return 20;
-        if (isChiitoitsu(handCard.card))    // 치또이쯔면 25부 시작
+        if (yoku::isChiitoitsu(handCard.card))    // 치또이쯔면 25부 시작
             return 25 ;
         
         if (tsumo)  // 쯔모면 +2
