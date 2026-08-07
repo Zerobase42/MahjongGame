@@ -13,8 +13,8 @@ class Player {
     mahjong::Tile winTile{};         // 대기->화료패
     bool tsumo = false;              // 쯔모/론
     bool menzen = true;              // 멘젠 확인 -> 치퐁깡 넣을때 false로 바꾸기
-    mahjong::Tile seatWind{};        // 자리풍
-    mahjong::Tile roundWind{};       // 본국 풍
+   
+    
     unsigned int YOKU = 0;     // 가능한 역 비트마스킹
     unsigned int YOKUMAN = 0;  // 가능한 역만 비트마스킹
 

@@ -1,3 +1,4 @@
+#pragma once
 #ifndef CHECKYOKUNYOKUMAN_HPP
 #define CHECKYOKUNYOKUMAN_HPP
 #include "mahjong.hpp"
