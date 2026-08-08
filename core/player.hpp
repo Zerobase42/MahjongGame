@@ -20,13 +20,15 @@ class Player {
    public:
     Player() = default;
     ~Player() = default;
+    /*
     void setHand(const mahjong::Hand& hand);
     const mahjong::Hand& getHand() const;
     void setScore(int score);
     int getScore() const;
+    */
 
   private:
-    static constexpr char priority[34] = {
+    static constexpr unsigned char priority[34] = {
         28,
         1, 2, 3, 4, 5, 6, 7, 8, 9, 29,
         10, 11, 12, 13, 14, 15, 16, 17, 18, 30,
