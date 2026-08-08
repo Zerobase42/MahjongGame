@@ -19,34 +19,54 @@ struct WinInfo {
 };
 
     enum class YokuMask : unsigned int {
-        LICHI=1, // 리치
-        IPPATSU=2, // 일발
-        PINGHU=4, // 핑후
-        TANYAO=8, // 탕야오
-        IPEKO=16, // 이페코
-        MENZENTSUMO=32, // 멘젠쯔모
-        RINSHAN=64, // 영상개화
-        LASTTILEDRAW=128, // 해저로월
-        LASTCARDDISCARD=256, // 하저로어
-        CHANKAN=512, // 창깡
+        LICHI=1,               // 리치
+        IPPATSU=1<<1,          // 일발
+        PINGHU=1<<2,           // 핑후
+        TANYAO=1<<3,           // 탕야오
+        IPEKO=1<<4,            // 이페코
+        MENZENTSUMO=1<<5,      // 멘젠쯔모
+        RINSHAN=1<<6,          // 영상개화
+        LASTTILEDRAW=1<<7,     // 해저로월
+        LASTCARDDISCARD=1<<8,  // 하저로어
+        CHANKAN=1<<9,          // 창깡
+        // 역패는 따로 체크. 바이트
+
         // 2판
-        CHITOITSU=1024, // 치또이츠
-        DOUBLELICHI=2048, // 더블리치
-        IKKITSUKAN=4096, // 일기통관
-        SANSHOKUDOUJUN=8192, // 삼색동순
-        SANSHOKUDOUKOU=16384, // 삼색동각
-        CHANTA=32768, // 찬타
-        HONROUTOU=65536, // 혼노두
-        SHOUSANGEN=131072, // 소삼원
-        TOITOIHOU=262144, // 또이또이
-        SANANKOU=524288, // 삼안커
-        SANKANTSU=1048576, // 삼깡즈
+        CHITOITSU=1<<10,       // 치또이츠
+        DOUBLELICHI=1<<11,     // 더블리치
+        IKKITSUKAN=1<<12,      // 일기통관
+        SANSHOKUDOUJUN=1<<13,  // 삼색동순
+        SANSHOKUDOUKOU=1<<14,  // 삼색동각
+        CHANTA=1<<15,          // 찬타
+        HONROUTOU=1<<16,       // 혼노두
+        SHOUSANGEN=1<<17,      // 소삼원
+        TOITOIHOU=1<<18,       // 또이또이
+        SANANKOU=1<<19,        // 삼안커
+        SANKANTSU=1<<20,       // 삼깡즈
         // 3판
-        HONITSU=2097152, // 혼일색
-        JUNCHANTA=4194304, // 쥰찬타
-        RYANPEIKOU=8388608, // 량페코
+        HONITSU=1<<21,         // 혼일색
+        JUNCHANTA=1<<22,       // 쥰찬타
+        RYANPEIKOU=1<<23,      // 량페코
         // 6판
-        CHINITSU=16777216 // 청일색
+        CHINITSU=1<<24         // 청일색
+    };
+    enum class YokuManMask : unsigned int {
+        KOKUSHI=1,             // 국사무쌍
+        TENHOU=1<<1,           // 천화
+        CHIIHOU=1<<2,          // 지화
+        CHUUREN=1<<3,          // 구련보등
+        RYUUIISOU=1<<4,        // 녹일색
+        DAISANGEN=1<<5,        // 대삼원
+        SHOUSUUSHI=1<<6,       // 소사희
+        CHINROUTOU=1<<7,       // 청노두
+        TSUUIISOU=1<<8,        // 자일색
+        SUUANKOU=1<<9,         // 스안커
+        SUUKANTSU=1<<10,       // 스깡쯔
+        // 더블 역만
+        KOKUSHI13=1<<11,       // 국사무쌍 13명 대기
+        JUNSEICHUUREN=1<<12,   // 순정구련보등
+        DAISUUSHI=1<<13,       // 대사희
+        SUUANKOUTANKI=1<<14    // 스안커 단기
     };
 
 
@@ -66,8 +86,8 @@ unsigned int isWin(const mahjong::Tile handCard[15]) {
     if (yoku::isChiitoitsu(handCard)) {
         scoreMask|=static_cast<unsigned int>(YokuMask::CHITOITSU);
     }
-    if(yoku::isKokushi(handCard)){
-        scoreMask|=static_cast<unsigned int>(YokuMask::CHITOITSU); // 국사무쌍은 치또이츠와 동일한 판정으로 처리
+    if(yokuMan::isKokushi(handCard)){
+        scoreMask|=static_cast<unsigned int>(YokuManMask::KOKUSHI); // 국사무쌍은 치또이츠와 동일한 판정으로 처리
     }
 
     find_dfs();
