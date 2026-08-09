@@ -7,16 +7,27 @@
 
 namespace winChecker {  // 주어진 손패 + 화료패 + 멘츠 정보를 보고 화료 가능한 형태인지 판단한다.
 
-struct WinInfo {
-    // 화료 가능한 형태인지 여부
-    // 손패
-    // 울어서 만든 패(바꾸기 불가)
-    // 화료패
-    // 화료패를 얻은 방법(쯔모, 론)
-    // 화료패를 얻은 위치(치,퐁,깡,자기)
-    // 역패로 얻은 역 비트마스킹
-    // 삼원패 자풍패 장풍패 연풍패
-};
+    struct WinInfo {
+        unsigned int state = 0;
+        // 화료 시 사용된 몸통
+        mahjong::Meld melds[mahjong::PAIR_MAX]{};
+        int meldCnt = 0;
+        // 머리
+        mahjong::Tile head = 0;
+        // 화료패
+        mahjong::Tile winTile = 0;
+        // 화료패를 얻은 방법
+        mahjong::WGet winGet = mahjong::WGet::SELF;
+        // 화료패가 들어간 몸통
+        // -1 : 머리 또는 아직 없음
+        int winMeld = -1;
+        // 역
+        unsigned int yaku = 0;
+        // 역만
+        unsigned int yakuman = 0;
+        // 도라, 적도라, 우라도리
+        int dora=0;
+    };
 
     enum class YokuMask : unsigned int {
         LICHI=1,               // 리치
@@ -69,31 +80,56 @@ struct WinInfo {
         SUUANKOUTANKI=1<<14    // 스안커 단기
     };
 
+    struct DFSState {
+        unsigned char cnt[mahjong::TILE_MAX]{};
 
-void find_dfs() {
-    // 손패를 분해하여 가능한 멘츠 조합을 찾는 깊이 우선 탐색 알고리즘 구현
-    // 각 멘츠 조합에 대해 가능한 역을 계산하고 YokuMask에 반영
-}
+        mahjong::Meld melds[mahjong::PAIR_MAX]{};
+        int meldCnt = 0;
 
+        mahjong::Tile head = 0;
 
-unsigned int isWin(const mahjong::Tile handCard[15]) {
-    // 역 포함 여부를 판단하는 로직을 구현
-    // 비트마스킹으로 가능한 역을 계산하여 반환
-    // 역만도 마찬가지
-    unsigned int scoreMask=0;
+        int winMeld = -1;
 
-    // 기저 사례 : 치또이쯔, 국사무쌍
-    if (yoku::isChiitoitsu(handCard)) {
-        scoreMask|=static_cast<unsigned int>(YokuMask::CHITOITSU);
-    }
-    if(yokuMan::isKokushi(handCard)){
-        scoreMask|=static_cast<unsigned int>(YokuManMask::KOKUSHI); // 국사무쌍은 치또이츠와 동일한 판정으로 처리
+        unsigned int state = 0;
+    };
+
+    void find_dfs() {
+        // 손패를 분해하여 가능한 멘츠 조합을 찾는 깊이 우선 탐색 알고리즘 구현
+        // 각 멘츠 조합에 대해 가능한 역을 계산하고 YokuMask에 반영
     }
 
-    find_dfs();
+    int __countCard(const mahjong::Tile handCard[mahjong::HAND_MAX],mahjong::Tile card){
+        int cnt=0;
+        for(int i=0;i<mahjong::HAND_MAX;i++){
+            if(handCard[i]==card)cnt++;
+        }
+        return cnt;
+    }
 
-    return scoreMask;  // 가능한 역의 비트마스크 반환
-}
+    unsigned int isWin(const mahjong::Tile handCard[mahjong::HAND_MAX]) {
+        // 역 포함 여부를 판단하는 로직을 구현
+        // 비트마스킹으로 가능한 역을 계산하여 반환
+        // 역만도 마찬가지
+        unsigned int scoreMask=0;
+
+        // 기저 사례 : 치또이쯔, 국사무쌍
+        if (yoku::isChiitoitsu(handCard)) {
+            scoreMask|=static_cast<unsigned int>(YokuMask::CHITOITSU);
+        }
+        if(yokuMan::isKokushi(handCard)){
+            scoreMask|=static_cast<unsigned int>(YokuManMask::KOKUSHI); // 국사무쌍은 치또이츠와 동일한 판정으로 처리
+        }
+
+        for (int i = 0; i < mahjong::HAND_MAX-1;i++){
+            if(handCard[i]==handCard[i+1]&&__countCard(handCard,handCard[i])==2){
+                // 머리 설정
+            }
+        }
+
+            find_dfs();
+
+        return scoreMask;  // 가능한 역의 비트마스크 반환
+    }
 }  // namespace winChecker
 
 #endif  // WINCHECKER_HPP

@@ -6,6 +6,7 @@ namespace mahjong{
     inline constexpr int PLAYER_MAX=4;
     inline constexpr int TILE_MAX=34;
     inline constexpr int PAIR_MAX=5;
+    inline constexpr int HAND_MAX=13;
     using Tile=unsigned char;
     inline unsigned char used_tile[TILE_MAX]{};
     enum MAHSKII:unsigned char{
@@ -38,7 +39,7 @@ namespace mahjong{
         WGet wGet;
     };
     struct Hand{
-        Tile card[15];// 손패
+        Tile card[HAND_MAX];  // 손패
         Meld melds[PAIR_MAX]; // 치퐁깡 모아놓은거. 회료시 확인
         int meldCnt; // 치퐁깡 개수
     };
