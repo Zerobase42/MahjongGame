@@ -6,7 +6,7 @@ namespace mahjong{
     inline constexpr int PLAYER_MAX=4;
     inline constexpr int TILE_MAX=34;
     inline constexpr int PAIR_MAX=5;
-    inline constexpr int HAND_MAX=13;
+    inline constexpr int HAND_MAX=14;
     using Tile=unsigned char;
     inline unsigned char used_tile[TILE_MAX]{};
     enum MAHSKII:unsigned char{
