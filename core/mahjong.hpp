@@ -43,6 +43,22 @@ namespace mahjong{
         Meld melds[PAIR_MAX]; // 치퐁깡 모아놓은거. 회료시 확인
         int meldCnt; // 치퐁깡 개수
     };
+
+    static constexpr unsigned char priority[34] = {
+        28,
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 29,
+        10, 11, 12, 13, 14, 15, 16, 17, 18, 30,
+        19, 20, 21, 22, 23, 24, 25, 26, 27, 31,
+        32, 33, 34
+    };
+    inline void PrioritySort(Tile* card, int size = HAND_MAX) {
+        std::sort(card,card + size,
+            [](Tile a, Tile b) {
+                if (a == 255 || b == 255) return a < b;
+                return priority[a] < priority[b];
+            });
+    }
+
 }//namespace majong
 
 #endif //MAHJONG_HPP

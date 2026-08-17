@@ -151,20 +151,25 @@ unsigned int isWin(const mahjong::Tile handCard[mahjong::HAND_MAX],
     // 역 포함 여부를 판단하는 로직을 구현
     // 비트마스킹으로 가능한 역을 계산하여 반환
     // 역만도 마찬가지
+    // 우선 패 정렬: handCard는 const이므로 로컬 복사본을 만들어 정렬
+    mahjong::Tile sortedHand[mahjong::HAND_MAX];
+    for (int i = 0; i < mahjong::HAND_MAX; ++i) sortedHand[i] = handCard[i];
+    mahjong::PrioritySort(sortedHand);
+
     unsigned int scoreMask = 0;
 
     // 기저 사례 : 치또이쯔, 국사무쌍 (몸통 4개+머리 형태가 아닌 특수 형태)
-    if (yoku::isChiitoitsu(handCard)) {
+    if (yoku::isChiitoitsu(sortedHand)) {
         scoreMask |= static_cast<unsigned int>(YokuMask::CHITOITSU);
     }
-    if (yokuMan::isKokushi(handCard)) {
+    if (yokuMan::isKokushi(sortedHand)) {
         scoreMask |= static_cast<unsigned int>(YokuManMask::KOKUSHI);  // 국사무쌍은 치또이츠와 동일한 판정으로 처리
     }
 
     // 일반형(몸통 4개 + 머리) : 머리를 바꿔가며 find_dfs로 가능한 모든
     // 몸통 조합을 탐색한 뒤, calcHan/calcFu로 점수를 매겨 가장 높은
     // 조합을 채택한다.
-    WinInfo best = findBestWin(handCard, tsumo, menzen);
+    WinInfo best = findBestWin(sortedHand, tsumo, menzen);
     if (best.meldCnt == mahjong::PAIR_MAX - 1) {  // 몸통 4개를 다 채운 유효한 분해가 존재
         scoreMask |= best.yaku;
     }

@@ -116,6 +116,11 @@ int main() {
         };
         CHECK(!yoku::isChiitoitsu(notChiitoi), "쌍이 깨지면 치또이츠 아님");
 
+        Tile notChiitoi2[mahjong::HAND_MAX] = {
+            M1, M1, M3, M3, M5, M5, M5, M5, S2, S2, S4, S4, E, E  // 똑같은 쌍이 2개
+        };
+        CHECK(!yoku::isChiitoitsu(notChiitoi2), "똑같은 머리 2개는 치또이츠 아님(깡)");
+
         Tile kokushi[mahjong::HAND_MAX] = {
             M1, M9, S1, S9, T1, T9, E, S, W, N, Wh, G, R, M1  // 13종 + M1 페어
         };

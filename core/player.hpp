@@ -27,22 +27,6 @@ class Player {
     int getScore() const;
     */
 
-   private:
-    static constexpr unsigned char priority[34] = {
-        28,
-        1, 2, 3, 4, 5, 6, 7, 8, 9, 29,
-        10, 11, 12, 13, 14, 15, 16, 17, 18, 30,
-        19, 20, 21, 22, 23, 24, 25, 26, 27, 31,
-        32, 33, 34
-    };
-    void PrioritySort() {  // 우선순위 정렬 -> 만 통 삭 바람패 삼원패 순으로 정렬
-        std::sort(handCard.card, handCard.card + mahjong::HAND_MAX,
-                  [this](mahjong::Tile a, mahjong::Tile b) {
-                      if (a == 255 || b == 255) return a < b;
-                      return priority[a] < priority[b];
-                  });
-    }
-
    public:
     void popCard(mahjong::MAHSKII card) {  // 마작 패 버리기
         for (int i = 0; i < mahjong::HAND_MAX; i++) {
@@ -50,7 +34,7 @@ class Player {
                 for (int j = i; j < mahjong::HAND_MAX-1; j++)
                     handCard.card[j] = handCard.card[j + 1];
                 handCard.card[mahjong::HAND_MAX-1] = 255;
-                PrioritySort();
+                mahjong::PrioritySort(handCard.card);
                 return;
             }
         }
@@ -58,7 +42,7 @@ class Player {
 
     void inpCard(mahjong::MAHSKII card) {  // 마작 패 받기
         handCard.card[mahjong::HAND_MAX-1] = card;
-        PrioritySort();
+        mahjong::PrioritySort(handCard.card);
     }
 
    private:
