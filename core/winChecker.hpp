@@ -10,172 +10,246 @@
 #include "winTypes.hpp"  // WinInfo / YokuMask / YokuManMask / DFSState
 
 namespace winChecker {  // 주어진 손패 + 화료패 + 멘츠 정보를 보고 화료 가능한 형태인지 판단한다.
-
-void find_dfs(
-    // 백트래킹으로 가능한 몸통 탐색
-    DFSState& dfs,
-    std::vector<WinInfo>& result) {
-    // 모든 몸통을 만들었으면 남은 패가 없어야 완성
-    if (dfs.meldCnt == mahjong::PAIR_MAX - 1) {
-        for (int i = 0; i < mahjong::TILE_MAX; ++i) {
-            if (dfs.cnt[i] != 0)
+    void find_dfs(
+        DFSState& dfs,
+        std::vector<WinInfo>& result) {
+        constexpr int NEED_MELD = mahjong::PAIR_MAX - 1;
+        //------------------------------------------------------------
+        // 종료 조건
+        //------------------------------------------------------------
+        if (dfs.meldCnt == NEED_MELD) {
+            for (int i = 0; i < mahjong::TILE_MAX; ++i) {
+                if (dfs.cnt[i] != 0)
+                    return;
+            }
+            // 화료패가 실제 완성 형태에 들어가지 않았다면 실패
+            if (dfs.winMeld == -1)
                 return;
+            WinInfo info;
+            info.state = dfs.state;
+            info.head = dfs.head;
+            info.winTile = dfs.winTile;
+            info.winMeld = dfs.winMeld;
+            info.meldCnt = dfs.meldCnt;
+            for (int i = 0; i < dfs.meldCnt; ++i)
+                info.melds[i] = dfs.melds[i];
+            result.push_back(info);
+            return;
         }
-
-        WinInfo info;
-        info.state = dfs.state;
-        info.head = dfs.head;
-        info.meldCnt = dfs.meldCnt;
-        info.winMeld = dfs.winMeld;
-
-        for (int i = 0; i < dfs.meldCnt; ++i)
-            info.melds[i] = dfs.melds[i];
-
-        result.push_back(info);
-        return;
-    }
-
-    // 가장 작은 남은 타일을 찾는다.
-    int first = -1;
-    for (int i = 0; i < mahjong::TILE_MAX; ++i) {
-        if (dfs.cnt[i]) {
-            first = i;
-            break;
+        //------------------------------------------------------------
+        // 가장 작은 남은 패
+        //------------------------------------------------------------
+        int first = -1;
+        for (int i = 0; i < mahjong::TILE_MAX; ++i) {
+            if (dfs.cnt[i] != 0) {
+                first = i;
+                break;
+            }
         }
-    }
-
-    // 패가 없는데 몸통 수가 부족하면 실패
-    if (first == -1)
-        return;
-
-    // 1. 커쯔
-    if (dfs.cnt[first] >= 3) {
-        dfs.cnt[first] -= 3;
-
-        int idx = dfs.meldCnt++;
-        dfs.melds[idx] = {
-            static_cast<mahjong::Tile>(first),
-            mahjong::MType::KOUT,
-            mahjong::WGet::SELF
-        };
-
-        find_dfs(dfs, result);
-
-        --dfs.meldCnt;
-        dfs.cnt[first] += 3;
-    }
-
-    // 2. 슌쯔
-    // 숫자패인지 확인
-    bool canShun =
-        (first >= mahjong::M1 && first <= mahjong::M7) ||
-        (first >= mahjong::S1 && first <= mahjong::S7) ||
-        (first >= mahjong::T1 && first <= mahjong::T7);
-
-    if (canShun &&
-        dfs.cnt[first + 1] &&
-        dfs.cnt[first + 2]) {
-        --dfs.cnt[first];
-        --dfs.cnt[first + 1];
-        --dfs.cnt[first + 2];
-
-        int idx = dfs.meldCnt++;
-
-        dfs.melds[idx] = {
-            static_cast<mahjong::Tile>(first),
-            mahjong::MType::SHUN,
-            mahjong::WGet::SELF
-        };
-
-        find_dfs(dfs, result);
-
-        --dfs.meldCnt;
-
-        ++dfs.cnt[first];
-        ++dfs.cnt[first + 1];
-        ++dfs.cnt[first + 2];
-    }
-}
-
-int __countCard(const mahjong::Tile handCard[mahjong::HAND_MAX], mahjong::Tile card) {
-    int cnt = 0;
-    for (int i = 0; i < mahjong::HAND_MAX; i++) {
-        if (handCard[i] == card) cnt++;
-    }
-    return cnt;
-}
-
-// handCard 전체(14장)를 보고 가능한 몸통 분해들 중 가장 점수가 높은
-// 것을 찾아 반환한다. 분해가 하나도 없으면(=일반형으로 화료 불가) state가
-// 그대로 0인 WinInfo가 반환되므로, 호출부에서 meldCnt==0 && head==0 등으로
-// 판정하거나 isWin()의 chiitoitsu/kokushi 비트로 대체 판단하면 된다.
-WinInfo findBestWin(const mahjong::Tile handCard[mahjong::HAND_MAX],
-                    bool tsumo = true, bool menzen = true) {
-    // 손패를 타일별 개수 배열로 변환 (find_dfs / 머리 탐색용)
-    unsigned char baseCnt[mahjong::TILE_MAX]{};
-    for (int i = 0; i < mahjong::HAND_MAX; i++) {
-        if (handCard[i] < mahjong::TILE_MAX)  // 255(빈 슬롯) 방어
-            baseCnt[handCard[i]]++;
-    }
-
-    std::vector<WinInfo> results;
-
-    // 머리 후보: 2장 이상 있는 모든 종류의 패에 대해 각각 시도
-    for (int t = 0; t < mahjong::TILE_MAX; t++) {
-        if (baseCnt[t] < 2) continue;
-
-        DFSState dfs;
-        for (int i = 0; i < mahjong::TILE_MAX; i++)
-            dfs.cnt[i] = baseCnt[i];
-
-        dfs.cnt[t] -= 2;                           // 머리 2장 제외
-        dfs.head = static_cast<mahjong::Tile>(t);  // 남은 12장으로 몸통 4개 탐색
-
-        find_dfs(dfs, results);
-    }
-
-    WinInfo best;  // 기본 생성자 -> state/meldCnt 등 0
-    int bestScore = -1;
-    for (auto& info : results) {  // calcScore가 info.yaku를 채워 넣으므로 비-const
-        int s = calcScore(info, tsumo, menzen);
-        if (s > bestScore) {
-            bestScore = s;
-            best = info;  // yaku가 채워진 이후 상태를 복사
+        // 패가 없는데 몸통이 부족함
+        if (first == -1)
+            return;
+        const mahjong::Tile tile =
+            static_cast<mahjong::Tile>(first);
+        //------------------------------------------------------------
+        // 1. 커쯔
+        //------------------------------------------------------------
+        if (dfs.cnt[first] >= 3) {
+            dfs.cnt[first] -= 3;
+            const int idx = dfs.meldCnt++;
+            dfs.melds[idx] = {
+                tile,
+                mahjong::MType::KOUT,
+                mahjong::WGet::SELF
+            };
+            // 현재 분기의 winMeld 저장
+            const int oldWinMeld = dfs.winMeld;
+            // 아직 화료패의 위치를 찾지 못했고
+            // 현재 커쯔가 화료패를 포함한다면 기록
+            if (dfs.winMeld == -1 &&
+                dfs.winTile == tile) {
+                dfs.winMeld = idx;
+            }
+            find_dfs(dfs, result);
+            // 백트래킹
+            dfs.winMeld = oldWinMeld;
+            --dfs.meldCnt;
+            dfs.cnt[first] += 3;
+        }
+        //------------------------------------------------------------
+        // 2. 슌쯔
+        //------------------------------------------------------------
+        if (mahjong::canShun(tile) &&
+            dfs.cnt[first + 1] != 0 &&
+            dfs.cnt[first + 2] != 0) {
+            --dfs.cnt[first];
+            --dfs.cnt[first + 1];
+            --dfs.cnt[first + 2];
+            const int idx = dfs.meldCnt++;
+            dfs.melds[idx] = {
+                tile,
+                mahjong::MType::SHUN,
+                mahjong::WGet::SELF
+            };
+            const int oldWinMeld = dfs.winMeld;
+            // 현재 슌쯔가 화료패를 포함하는가?
+            if (dfs.winMeld == -1 &&
+                (dfs.winTile == static_cast<mahjong::Tile>(first) ||
+                dfs.winTile == static_cast<mahjong::Tile>(first + 1) ||
+                dfs.winTile == static_cast<mahjong::Tile>(first + 2))) {
+                dfs.winMeld = idx;
+            }
+            find_dfs(dfs, result);
+            // 백트래킹
+            dfs.winMeld = oldWinMeld;
+            --dfs.meldCnt;
+            ++dfs.cnt[first];
+            ++dfs.cnt[first + 1];
+            ++dfs.cnt[first + 2];
         }
     }
-    return best;
-}
-
-unsigned int isWin(const mahjong::Tile handCard[mahjong::HAND_MAX],
-                   bool tsumo = true, bool menzen = true) {
-    // 역 포함 여부를 판단하는 로직을 구현
-    // 비트마스킹으로 가능한 역을 계산하여 반환
-    // 역만도 마찬가지
-    // 우선 패 정렬: handCard는 const이므로 로컬 복사본을 만들어 정렬
-    mahjong::Tile sortedHand[mahjong::HAND_MAX];
-    for (int i = 0; i < mahjong::HAND_MAX; ++i) sortedHand[i] = handCard[i];
-    mahjong::PrioritySort(sortedHand);
-
-    unsigned int scoreMask = 0;
-
-    // 기저 사례 : 치또이쯔, 국사무쌍 (몸통 4개+머리 형태가 아닌 특수 형태)
-    if (yoku::isChiitoitsu(sortedHand)) {
-        scoreMask |= static_cast<unsigned int>(YokuMask::CHITOITSU);
-    }
-    if (yokuMan::isKokushi(sortedHand)) {
-        scoreMask |= static_cast<unsigned int>(YokuManMask::KOKUSHI);  // 국사무쌍은 치또이츠와 동일한 판정으로 처리
+    int __countCard(const mahjong::Tile handCard[mahjong::HAND_MAX], mahjong::Tile card) {
+        int cnt = 0;
+        for (int i = 0; i < mahjong::HAND_MAX; i++) {
+            if (handCard[i] == card) cnt++;
+        }
+        return cnt;
     }
 
-    // 일반형(몸통 4개 + 머리) : 머리를 바꿔가며 find_dfs로 가능한 모든
-    // 몸통 조합을 탐색한 뒤, calcHan/calcFu로 점수를 매겨 가장 높은
-    // 조합을 채택한다.
-    WinInfo best = findBestWin(sortedHand, tsumo, menzen);
-    if (best.meldCnt == mahjong::PAIR_MAX - 1) {  // 몸통 4개를 다 채운 유효한 분해가 존재
-        scoreMask |= best.yaku;
-    }
+    // handCard 전체(14장)를 보고 가능한 몸통 분해들 중 가장 점수가 높은
+    // 것을 찾아 반환한다. 분해가 하나도 없으면(=일반형으로 화료 불가) state가
+    // 그대로 0인 WinInfo가 반환되므로, 호출부에서 meldCnt==0 && head==0 등으로
+    // 판정하거나 isWin()의 chiitoitsu/kokushi 비트로 대체 판단하면 된다.
+    WinInfo findBestWin(const mahjong::Tile handCard[mahjong::HAND_MAX], mahjong::Tile winTile,
+                        bool tsumo = true, bool menzen = true) {
+        unsigned char baseCnt[mahjong::TILE_MAX]{};
 
-    return scoreMask;  // 가능한 역의 비트마스크 반환
-}
+        // ------------------------------------------------------------
+        // 13장 손패
+        // ------------------------------------------------------------
+        for (int i = 0; i < 13; ++i) {
+            const mahjong::Tile tile = handCard[i];
+
+            if (tile < mahjong::TILE_MAX)
+                ++baseCnt[tile];
+        }
+
+        // ------------------------------------------------------------
+        // 화료패
+        // ------------------------------------------------------------
+        if (winTile >= mahjong::TILE_MAX)
+            return {};
+
+        ++baseCnt[winTile];
+
+        std::vector<WinInfo> results;
+
+        // ------------------------------------------------------------
+        // 머리 후보
+        // ------------------------------------------------------------
+        for (int t = 0; t < mahjong::TILE_MAX; ++t) {
+            if (baseCnt[t] < 2)
+                continue;
+
+            DFSState dfs;
+
+            for (int i = 0; i < mahjong::TILE_MAX; ++i)
+                dfs.cnt[i] = baseCnt[i];
+
+            // 머리 제거
+            dfs.cnt[t] -= 2;
+
+            dfs.head =
+                static_cast<mahjong::Tile>(t);
+
+            // DFS가 반드시 알고 있어야 하는 화료패
+            dfs.winTile = winTile;
+
+            // 화료패가 머리로 사용됨
+            if (dfs.head == dfs.winTile)
+                dfs.winMeld = -2;
+
+            find_dfs(dfs, results);
+        }
+
+        // ------------------------------------------------------------
+        // 가장 좋은 분해 선택
+        // ------------------------------------------------------------
+        WinInfo best;
+
+        int bestScore = -1;
+
+        for (auto& info : results) {
+            const int score =
+                calcScore(info, tsumo, menzen);
+
+            if (score > bestScore) {
+                bestScore = score;
+                best = info;
+            }
+        }
+
+        return best;
+    }
+    
+    unsigned int isWin(
+        const mahjong::Tile handCard[13],
+        mahjong::Tile winTile,
+        bool tsumo = true,
+        bool menzen = true) {
+        unsigned int scoreMask = 0;
+
+        // ------------------------------------------------------------
+        // 화료패 유효성
+        // ------------------------------------------------------------
+        if (winTile >= mahjong::TILE_MAX)
+            return 0;
+
+        // ------------------------------------------------------------
+        // 정렬된 13장 손패 생성
+        // ------------------------------------------------------------
+        mahjong::Tile sortedHand[13];
+
+        for (int i = 0; i < 13; ++i)
+            sortedHand[i] = handCard[i];
+
+        mahjong::PrioritySort(sortedHand, 13);
+
+        // ------------------------------------------------------------
+        // 치또이츠
+        // ------------------------------------------------------------
+        if (yoku::isChiitoitsu(sortedHand, winTile)) {
+            scoreMask |=
+                static_cast<unsigned int>(
+                    YokuMask::CHITOITSU);
+        }
+
+        // ------------------------------------------------------------
+        // 국사무쌍
+        // ------------------------------------------------------------
+        if (yokuMan::isKokushi(sortedHand, winTile)) {
+            scoreMask |=
+                static_cast<unsigned int>(
+                    YokuManMask::KOKUSHI);
+        }
+
+        // ------------------------------------------------------------
+        // 일반형
+        // ------------------------------------------------------------
+        WinInfo best =
+            findBestWin(
+                sortedHand,
+                winTile,
+                tsumo,
+                menzen);
+
+        if (best.meldCnt ==
+            mahjong::PAIR_MAX - 1) {
+            scoreMask |= best.yaku;
+        }
+
+        return scoreMask;
+    }    
 }  // namespace winChecker
 
 #endif  // WINCHECKER_HPP

@@ -2,19 +2,39 @@
 #ifndef CHECKYOKUNYOKUMAN_HPP
 #define CHECKYOKUNYOKUMAN_HPP
 
-#include <algorithm>
 #include "mahjong.hpp"
 
 namespace yoku{
     // 치또이츠 : 머리가 7개.
-    bool isChiitoitsu(const mahjong::Tile handCard[mahjong::HAND_MAX]) {  // 치또이츠 판별
-        int pairCnt = 0;
-        for (int i = 0; i < 14; i += 2) {        // 정렬되어있다 가정
-            if (handCard[i] == handCard[i + 1])  // 머리 발견
-                pairCnt++;
-        }
-        return pairCnt == 7;
+bool isChiitoitsu(
+    const mahjong::Tile handCard[13],
+    mahjong::Tile winTile) {
+    unsigned char cnt[mahjong::TILE_MAX]{};
+
+    // 13장
+    for (int i = 0; i < 13; ++i) {
+        if (handCard[i] < mahjong::TILE_MAX)
+            ++cnt[handCard[i]];
     }
+
+    // 화료패
+    if (winTile >= mahjong::TILE_MAX)
+        return false;
+
+    ++cnt[winTile];
+
+    int pairCnt = 0;
+
+    for (int i = 0; i < mahjong::TILE_MAX; ++i) {
+        if (cnt[i] == 2) {
+            ++pairCnt;
+        } else if (cnt[i] != 0) {
+            return false;
+        }
+    }
+
+    return pairCnt == 7;
+}
 
     // 모든 몸통이 슌쯔, 머리는 객풍패일때, 머리 두개로 양면대기 시 성립
     bool isPinfu(const mahjong::Tile handCard[mahjong::HAND_MAX]) {  // 핑후 판별
@@ -34,31 +54,62 @@ namespace yoku{
         (void)head;
         return true;
     }
+    // 요구패를 사용하지 않고 화료시 성립
+    bool isTangyao(const mahjong::Tile handCard[mahjong::HAND_MAX]){
+        for(int i=0;i<mahjong::HAND_MAX;i++){
+            if(){
+                return false;
+            }
+        }
+        return true;
+    }
+    bool is(const mahjong::Tile handCard[mahjong::HAND_MAX]) {
+        ;
+    }
 }
 
 namespace yokuMan{
     // 국사무쌍 : 19패(각 수트 1,9) + 자패 7종을 모두 1장 이상, 그 중 1종류는 2장(페어) 보유
-    bool isKokushi(const mahjong::Tile handCard[mahjong::HAND_MAX]) {
-        static const mahjong::Tile kokushiTiles[13] = {
-            mahjong::MAHSKII::M1, mahjong::MAHSKII::M9,
-            mahjong::MAHSKII::T1, mahjong::MAHSKII::T9,
-            mahjong::MAHSKII::S1, mahjong::MAHSKII::S9,
-            mahjong::MAHSKII::E, mahjong::MAHSKII::S,
-            mahjong::MAHSKII::W, mahjong::MAHSKII::N,
-            mahjong::MAHSKII::Wh, mahjong::MAHSKII::G, mahjong::MAHSKII::R
-        };
+bool isKokushi(
+    const mahjong::Tile handCard[13],
+    mahjong::Tile winTile) {
+    unsigned char cnt[mahjong::TILE_MAX]{};
 
-        bool hasPair = false;
-        for (auto tile : kokushiTiles) {
-            int cnt = 0;
-            for (int i = 0; i < mahjong::HAND_MAX; i++) {
-                if (handCard[i] == tile) cnt++;
-            }
-            if (cnt == 0) return false;   // 요구 패 중 하나라도 없으면 국사무쌍 아님
-            if (cnt >= 2) hasPair = true; // 페어가 되는 패가 하나라도 있어야 함
-        }
-        return hasPair;
+    for (int i = 0; i < 13; ++i) {
+        if (handCard[i] < mahjong::TILE_MAX)
+            ++cnt[handCard[i]];
     }
+
+    if (winTile >= mahjong::TILE_MAX)
+        return false;
+
+    ++cnt[winTile];
+
+    constexpr mahjong::Tile terminals[] = {
+        mahjong::M1, mahjong::M9,
+        mahjong::S1, mahjong::S9,
+        mahjong::T1, mahjong::T9,
+        mahjong::E,
+        mahjong::S,
+        mahjong::W,
+        mahjong::N,
+        mahjong::Wh,
+        mahjong::G,
+        mahjong::R
+    };
+
+    bool pair = false;
+
+    for (mahjong::Tile tile : terminals) {
+        if (cnt[tile] == 0)
+            return false;
+
+        if (cnt[tile] >= 2)
+            pair = true;
+    }
+
+    return pair;
+}
 
     // 구련보등 : 한 수트로만 구성 + 1112345678999 형태 + 아무 패나 1장 추가
     bool isChuuren(const mahjong::Tile handCard[mahjong::HAND_MAX]) {

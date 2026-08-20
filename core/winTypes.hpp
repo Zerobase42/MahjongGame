@@ -12,23 +12,26 @@ namespace winChecker {
 
 struct WinInfo {
     unsigned int state = 0;
-    // 화료 시 사용된 몸통
+
     mahjong::Meld melds[mahjong::PAIR_MAX]{};
     int meldCnt = 0;
-    // 머리
+
     mahjong::Tile head = 0;
+
     // 화료패
     mahjong::Tile winTile = 0;
+
     // 화료패를 얻은 방법
     mahjong::WGet winGet = mahjong::WGet::SELF;
-    // 화료패가 들어간 몸통
-    // -1 : 머리 또는 아직 없음
+
+    // -2 : 머리
+    // -1 : 없음
+    // 0~3 : 해당 몸통
     int winMeld = -1;
-    // 역
+
     unsigned int yaku = 0;
-    // 역만
     unsigned int yakuman = 0;
-    // 도라, 적도라, 우라도리
+
     int dora = 0;
 };
 
@@ -91,6 +94,12 @@ struct DFSState {
 
     mahjong::Tile head = 0;
 
+    // 화료패
+    mahjong::Tile winTile = 0;
+
+    // -2 : 머리에 화료패가 들어감
+    // -1 : 아직 화료패가 들어간 위치를 찾지 못함
+    // 0~3 : melds[0] ~ melds[3]
     int winMeld = -1;
 
     unsigned int state = 0;

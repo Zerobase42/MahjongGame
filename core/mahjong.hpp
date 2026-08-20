@@ -2,6 +2,8 @@
 #ifndef MAHJONG_HPP
 #define MAHJONG_HPP
 
+#include <algorithm>
+
 namespace mahjong{
     inline constexpr int PLAYER_MAX=4;
     inline constexpr int TILE_MAX=34;
@@ -44,7 +46,7 @@ namespace mahjong{
         int meldCnt; // 치퐁깡 개수
     };
 
-    static constexpr unsigned char priority[34] = {
+    inline static constexpr unsigned char priority[34] = {
         28,
         1, 2, 3, 4, 5, 6, 7, 8, 9, 29,
         10, 11, 12, 13, 14, 15, 16, 17, 18, 30,
@@ -57,6 +59,11 @@ namespace mahjong{
                 if (a == 255 || b == 255) return a < b;
                 return priority[a] < priority[b];
             });
+    }
+    inline constexpr bool canShun(Tile tile) {
+        return (M1 <= tile && tile <= M7) ||
+               (S1 <= tile && tile <= S7) ||
+               (T1 <= tile && tile <= T7);
     }
 
 }//namespace majong
