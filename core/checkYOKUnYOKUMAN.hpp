@@ -54,6 +54,9 @@ bool isChiitoitsu(
         (void)head;
         return true;
     }
+
+#if VERSION > 200// 나머지 역 화료 체크 분리
+
     // 요구패를 사용하지 않고 화료시 성립
     bool isTangyao(const mahjong::Tile handCard[mahjong::HAND_MAX]){
         for(int i=0;i<mahjong::HAND_MAX;i++){
@@ -66,6 +69,8 @@ bool isChiitoitsu(
     bool is(const mahjong::Tile handCard[mahjong::HAND_MAX]) {
         ;
     }
+
+#endif
 }
 
 namespace yokuMan{
