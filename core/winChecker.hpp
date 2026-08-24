@@ -2,11 +2,45 @@
 #ifndef WINCHECKER_HPP
 #define WINCHECKER_HPP
 #include<vector>
-#include "calcScore.hpp" //calcHan/calcFu/calcScore
+#include "calcScore.hpp"//calcHan/calcFu/calcScore
 #include "checkYOKUnYOKUMAN.hpp"
 #include "mahjong.hpp"
-#include "winTypes.hpp" //WinInfo/YokuMask/YokuManMask/DFSState
+#include "winTypes.hpp"//WinInfo/YokuMask/YokuManMask/DFSState
 namespace winChecker{//주어진 손패+화료패+멘츠 정보를 보고 화료 가능한 형태인지 판단한다.
+    inline unsigned int checkYaku(
+        const yaku::YakuContext&ctx
+    ){
+        unsigned int mask=0;
+        if(yaku::isTanyao(ctx))
+            mask|=static_cast<unsigned int>(
+                YokuMask::TANYAO
+            );
+        if(yaku::isPinfu(ctx))
+            mask|=static_cast<unsigned int>(
+                YokuMask::PINGHU
+            );
+        if(yaku::isIipeiko(ctx))
+            mask|=static_cast<unsigned int>(
+                YokuMask::IPEKO
+            );
+        if(yaku::isRyanpeikou(ctx))
+            mask|=static_cast<unsigned int>(
+                YokuMask::RYANPEIKOU
+            );
+        if(yaku::isToitoi(ctx))
+            mask|=static_cast<unsigned int>(
+                YokuMask::TOITOIHOU
+            );
+        if(yaku::isHonitsu(ctx))
+            mask|=static_cast<unsigned int>(
+                YokuMask::HONITSU
+            );
+        if(yaku::isChinitsu(ctx))
+            mask|=static_cast<unsigned int>(
+                YokuMask::CHINITSU
+            );
+        return mask;
+    }
     void find_dfs(
         DFSState&dfs,
         std::vector<WinInfo>&result){
@@ -76,7 +110,7 @@ namespace winChecker{//주어진 손패+화료패+멘츠 정보를 보고 화료
         //------------------------------------------------------------
         //2. 슌쯔
         //------------------------------------------------------------
-        if(mahjong::canShun(tile)&&
+        if(mahjong::isShun(tile)&&
             dfs.cnt[first+1]!=0&&
             dfs.cnt[first+2]!=0){
             --dfs.cnt[first];
@@ -169,11 +203,8 @@ namespace winChecker{//주어진 손패+화료패+멘츠 정보를 보고 화료
         }
         return best;
     }
-    unsigned int isWin(
-        const mahjong::Tile handCard[13],
-        mahjong::Tile winTile,
-        bool tsumo=true,
-        bool menzen=true){
+    unsigned int isWin(const mahjong::Tile handCard[13],
+                       mahjong::Tile winTile,bool tsumo=true,bool menzen=true){
         unsigned int scoreMask=0;
         //------------------------------------------------------------
         //화료패 유효성
@@ -219,4 +250,4 @@ namespace winChecker{//주어진 손패+화료패+멘츠 정보를 보고 화료
         return scoreMask;
     }    
 }//namespace winChecker
-#endif //WINCHECKER_HPP
+#endif//WINCHECKER_HPP

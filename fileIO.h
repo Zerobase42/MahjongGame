@@ -1,6 +1,6 @@
 #include<stdlib.h>
 #include<stdio.h>
-int readFILE(char*filename,char&buf){
+int readFILE(char*filename,char*buf){
     FILE*file=fopen(filename,"rb");
     if(file==NULL){
         return-1;

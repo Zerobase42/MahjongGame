@@ -3,60 +3,268 @@
 #define CHECKYOKUNYOKUMAN_HPP
 #include "mahjong.hpp"
 namespace yaku{
-    //치또이츠:머리가 7개.
-    bool isChiitoitsu(
-        const mahjong::Tile handCard[13],
-        mahjong::Tile winTile){
-        unsigned char cnt[mahjong::TILE_MAX]{};
-        //13장
-        for(int i=0;i<13;++i){
-            if(handCard[i]<mahjong::TILE_MAX)
-                ++cnt[handCard[i]];
-        }
+    struct YakuContext{
+        //머리
+        mahjong::Tile head=0;
+        //울어서 만든 몸통
+        const mahjong::Meld*openMelds=nullptr;
+        int openMeldCnt=0;
+        //손패에서 DFS로 만든 몸통
+        const mahjong::Meld*handMelds=nullptr;
+        int handMeldCnt=0;
         //화료패
-        if(winTile>=mahjong::TILE_MAX)
+        mahjong::Tile winTile=0;
+        //SELF/RON
+        mahjong::WGet winGet=mahjong::WGet::SELF;
+        //멘젠 여부
+        bool menzen=true;
+    };
+    //============================================================
+    //공통 몸통 순회
+    //============================================================
+    template<typename Func>
+    bool allMeld(const YakuContext&ctx,Func func){
+        for(int i=0;i<ctx.openMeldCnt;++i){
+            if(!func(ctx.openMelds[i]))
+                return false;
+        }
+        for(int i=0;i<ctx.handMeldCnt;++i){
+            if(!func(ctx.handMelds[i]))
+                return false;
+        }
+        return true;
+    }
+    template<typename Func>
+    bool anyMeld(const YakuContext&ctx,Func func){
+        for(int i=0;i<ctx.openMeldCnt;++i){
+            if(func(ctx.openMelds[i]))
+                return true;
+        }
+        for(int i=0;i<ctx.handMeldCnt;++i){
+            if(func(ctx.handMelds[i]))
+                return true;
+        }
+        return false;
+    }
+    //손패에서 DFS로 만든 몸통만 검사
+    template<typename Func>
+    bool allHandMeld(const YakuContext&ctx,Func func){
+        for(int i=0;i<ctx.handMeldCnt;++i){
+            if(!func(ctx.handMelds[i]))
+                return false;
+        }
+        return true;
+    }
+    //============================================================
+    //몸통 개수
+    //============================================================
+    inline int meldCnt(const YakuContext&ctx){
+        return ctx.openMeldCnt+ctx.handMeldCnt;
+    }
+    //============================================================
+    //슌쯔/커쯔 검사
+    //============================================================
+    inline bool isShun(const mahjong::Meld&meld){
+        return meld.type==mahjong::MType::SHUN;
+    }
+    inline bool isKoutsu(const mahjong::Meld&meld){
+        return meld.type==mahjong::MType::KOUT||
+               meld.type==mahjong::MType::PON||
+               meld.type==mahjong::MType::INK||
+               meld.type==mahjong::MType::KAN||
+               meld.type==mahjong::MType::SKN;
+    }
+    //============================================================
+    //역패
+    //============================================================
+    inline bool isYakuhaiTile(mahjong::Tile tile,mahjong::Tile seatWind,mahjong::Tile roundWind){
+        if(tile==mahjong::Wh||
+            tile==mahjong::G||
+            tile==mahjong::R)
+            return true;
+        if(tile==seatWind)
+            return true;
+        if(tile==roundWind)
+            return true;
+        return false;
+    }
+    inline bool hasYakuhai(const YakuContext&ctx,mahjong::Tile seatWind,mahjong::Tile roundWind){
+        return anyMeld(ctx,[&](const mahjong::Meld&meld){
+            return isKoutsu(meld)&&
+                   isYakuhaiTile(
+                       meld.tile,
+                       seatWind,
+                       roundWind);
+        });
+    }
+    //============================================================
+    //탕야오
+    //============================================================
+    inline bool isTanyao(const YakuContext&ctx){
+        if(mahjong::isTerminalOrHonor(ctx.head))
             return false;
-        ++cnt[winTile];
+        return allMeld(ctx,[](const mahjong::Meld&meld){
+            //슌쯔는 시작패만 검사해도
+            //123/789를 구분해야 하므로
+            //실제 mahjong.hpp의 함수에 맞춰 수정
+            return !mahjong::isTerminalOrHonor(meld.tile);
+        });
+    }
+    //============================================================
+    //또이또이
+    //============================================================
+    inline bool isToitoi(const YakuContext&ctx){
+        if(meldCnt(ctx)!=mahjong::PAIR_MAX-1)
+            return false;
+        return allMeld(ctx,[](const mahjong::Meld&meld){
+            return isKoutsu(meld);
+        });
+    }
+    //============================================================
+    //이페코
+    //============================================================
+    inline bool isIipeiko(const YakuContext&ctx){
+        //멘젠 한정
+        if(!ctx.menzen)
+            return false;
+        //울은 몸통이 있으면 불가능
+        if(ctx.openMeldCnt!=0)
+            return false;
+        for(int i=0;i<ctx.handMeldCnt;++i){
+            if(!isShun(ctx.handMelds[i]))
+                continue;
+            for(int j=i+1;j<ctx.handMeldCnt;++j){
+                if(!isShun(ctx.handMelds[j]))
+                    continue;
+                if(ctx.handMelds[i].tile==
+                    ctx.handMelds[j].tile)
+                    return true;
+            }
+        }
+        return false;
+    }
+    //============================================================
+    //량페코
+    //============================================================
+    inline bool isRyanpeikou(const YakuContext&ctx){
+        if(!ctx.menzen)
+            return false;
+        if(ctx.openMeldCnt!=0)
+            return false;
         int pairCnt=0;
-        for(int i=0;i<mahjong::TILE_MAX;++i){
-            if(cnt[i]==2){
-                ++pairCnt;
-            }else if(cnt[i]!=0){
-                return false;
+        for(int i=0;i<ctx.handMeldCnt;++i){
+            if(!isShun(ctx.handMelds[i]))
+                continue;
+            for(int j=i+1;j<ctx.handMeldCnt;++j){
+                if(!isShun(ctx.handMelds[j]))
+                    continue;
+                if(ctx.handMelds[i].tile==
+                    ctx.handMelds[j].tile)
+                    ++pairCnt;
             }
         }
-        return pairCnt==7;
+        return pairCnt==2;
     }
-    //모든 몸통이 슌쯔,머리는 객풍패일때,머리 두개로 양면대기 시 성립
-    bool isPinfu(const mahjong::Tile handCard[mahjong::HAND_MAX]){//핑후 판별
-        mahjong::Tile head{};
-        for(int i=0;i<mahjong::HAND_MAX-1;i++){
-            if(handCard[i]==handCard[i+1]){//머리 발견
-                head=handCard[i];
-                break;
-            }
-        }
-        //TODO:실제 핑후 조건(전부 슌쯔+객풍 머리+양면대기)판별 필요.
-        //현재는 자리만 잡아둔 스텁으로,winChecker의 몸통 분해 결과(WinInfo)를
-        //받아 판정하도록 옮기는 편이 자연스럽다(여기서는 손패만 보고는
-        //몸통이 전부 슌쯔인지 알 수 없음).
-        (void)head;
+    //============================================================
+    //핑후
+    //============================================================
+    inline bool isPinfu(const YakuContext&ctx){
+        //멘젠 한정
+        if(!ctx.menzen)
+            return false;
+        if(ctx.openMeldCnt!=0)
+            return false;
+        //모든 몸통 슌쯔
+        if(!allHandMeld(ctx,[](const mahjong::Meld&meld){
+                return isShun(meld);
+            }))
+            return false;
+        //머리가 역패면 핑후 불가
+        //실제 자풍/장풍은 YakuContext에 추가해서 검사하는 것을 권장
+        if(ctx.head==mahjong::E||
+            ctx.head==mahjong::S||
+            ctx.head==mahjong::W||
+            ctx.head==mahjong::N||
+            ctx.head==mahjong::Wh||
+            ctx.head==mahjong::G||
+            ctx.head==mahjong::R)
+            return false;
+        //TODO:
+        //winTile을 이용한 양면대기 판정
+        if(!isRyanmenWait(ctx))
+            return false;
         return true;
     }
-#if VERSION>200//나머지 역 화료 체크 분리
-    //요구패를 사용하지 않고 화료시 성립
-    bool isTangyao(const mahjong::Tile handCard[mahjong::HAND_MAX]){
-        for(int i=0;i<mahjong::HAND_MAX;i++){
-            if(){
-                return false;
+    //============================================================
+    //혼일색
+    //============================================================
+    inline bool isHonitsu(const YakuContext&ctx){
+        int suit=-1;
+        bool honor=false;
+        auto check=[&](mahjong::Tile tile){
+            if(mahjong::isHonor(tile)){
+                honor=true;
+                return true;
             }
-        }
-        return true;
+            int s=mahjong::getSuit(tile);
+            if(suit==-1){
+                suit=s;
+                return true;
+            }
+            return suit==s;
+        };
+        if(!check(ctx.head))
+            return false;
+        if(!allMeld(ctx,[&](const mahjong::Meld&meld){
+                return check(meld.tile);
+            }))
+            return false;
+        return honor;
     }
-    bool is(const mahjong::Tile handCard[mahjong::HAND_MAX]){
-        ;
+    //============================================================
+    //청일색
+    //============================================================
+    inline bool isChinitsu(const YakuContext&ctx){
+        int suit=-1;
+        auto check=[&](mahjong::Tile tile){
+            if(mahjong::isHonor(tile))
+                return false;
+            int s=mahjong::getSuit(tile);
+            if(suit==-1){
+                suit=s;
+                return true;
+            }
+            return suit==s;
+        };
+        if(!check(ctx.head))
+            return false;
+        return allMeld(ctx,[&](const mahjong::Meld&meld){
+            return check(meld.tile);
+        });
     }
-#endif
+    //============================================================
+    //YakuContext 생성
+    //============================================================
+    inline YakuContext makeYakuContext(
+        const mahjong::Tile head,
+        const mahjong::Meld*openMelds,
+        int openMeldCnt,
+        const mahjong::Meld*handMelds,
+        int handMeldCnt,
+        mahjong::Tile winTile,
+        mahjong::WGet winGet,
+        bool menzen){
+        YakuContext ctx;
+        ctx.head=head;
+        ctx.openMelds=openMelds;
+        ctx.openMeldCnt=openMeldCnt;
+        ctx.handMelds=handMelds;
+        ctx.handMeldCnt=handMeldCnt;
+        ctx.winTile=winTile;
+        ctx.winGet=winGet;
+        ctx.menzen=menzen;
+        return ctx;
+    }
 }
 namespace yakuMan{
         //국사무쌍:19패(각 수트 1,9)+자패 7종을 모두 1장 이상,그 중 1종류는 2장(페어)보유
@@ -118,4 +326,4 @@ namespace yakuMan{
         return true;//남는 1장은 자연히 텐파이 확장패로 처리됨
     }
 }
-#endif //CHECKYOKUNYOKUMAN_HPP
+#endif//CHECKYOKUNYOKUMAN_HPP

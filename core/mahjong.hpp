@@ -62,10 +62,24 @@ namespace mahjong{
                 return priority[a]<priority[b];
             });
     }
-    inline constexpr bool canShun(Tile tile){
+    inline constexpr bool isShun(Tile tile){
         return(M1<=tile&&tile<=M7)||
               (S1<=tile&&tile<=S7)||
               (T1<=tile&&tile<=T7);
+    }
+    inline bool isHonor(Tile tile) {
+        return tile >= E && tile <= R;
+    }
+    inline bool isTerminal(Tile tile) {
+        return (tile >= M1 && tile <= M9 &&
+                (tile == M1 || tile == M9)) ||
+               (tile >= S1 && tile <= S9 &&
+                (tile == S1 || tile == S9)) ||
+               (tile >= T1 && tile <= T9 &&
+                (tile == T1 || tile == T9));
+    }
+    inline bool isTerminalOrHonor(Tile tile) {
+        return isTerminal(tile) || isHonor(tile);
     }
 }//namespace majong
 #endif//MAHJONG_HPP
