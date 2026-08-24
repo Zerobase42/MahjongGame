@@ -2,9 +2,9 @@
 //마작 역 판별 로직 테스트용 코드
 //
 //빌드:
-//  g++-std=c++17-Wall-Wextra-o test_yoku test_yoku.cpp
+//  g++-std=c++17-Wall-Wextra-o test_yaku test_yaku.cpp
 //실행:
-//  ./test_yoku
+//  ./test_yaku
 //
 //외부 테스트 프레임워크 없이 간단한 assert 스타일로 작성했습니다.
 //각 TEST_CASE는 실패해도 프로그램이 멈추지 않고 다음 케이스로 넘어가며,
@@ -110,36 +110,36 @@ int main(){
         Tile chiitoi[13]={
             M1,M1,M3,M3,M5,M5,M7,M7,S2,S2,S4,S4,E //6쌍+외톨이 E
         };
-        CHECK(yoku::isChiitoitsu(chiitoi,E),"화료패(E)로 마지막 쌍을 채우면 치또이츠(7쌍) 판정");
+        CHECK(yaku::isChiitoitsu(chiitoi,E),"화료패(E)로 마지막 쌍을 채우면 치또이츠(7쌍) 판정");
         //같은 13장인데 화료패가 페어를 완성시키지 못하면(S)치또이츠 아님
-        CHECK(!yoku::isChiitoitsu(chiitoi,S),"화료패가 짝을 못 채우면(다른 패) 치또이츠 아님");
+        CHECK(!yaku::isChiitoitsu(chiitoi,S),"화료패가 짝을 못 채우면(다른 패) 치또이츠 아님");
         //화료패가 유효 범위를 벗어나면 무조건 실패해야 함
-        CHECK(!yoku::isChiitoitsu(chiitoi,INVALID_TILE),"화료패 값이 잘못되면 치또이츠 판정 실패");
+        CHECK(!yaku::isChiitoitsu(chiitoi,INVALID_TILE),"화료패 값이 잘못되면 치또이츠 판정 실패");
         //이미 손패에 같은 패가 3장 있는 상태에서 화료패로 그 패를 또 뽑으면
         //(쿠사낑)그 패는 4장(깡)이 되어 짝이 아니므로 치또이츠가 깨져야 함
         Tile almostQuad[13]={
             M1,M1,M3,M3,M5,M5,M5,S2,S2,S4,S4,E,E //M5가 이미 3장
         };
-        CHECK(!yoku::isChiitoitsu(almostQuad,M5),"화료패로 같은 패의 4번째 장을 뽑으면(깡) 치또이츠 아님");
+        CHECK(!yaku::isChiitoitsu(almostQuad,M5),"화료패로 같은 패의 4번째 장을 뽑으면(깡) 치또이츠 아님");
         //13면대기 국사무쌍:13종 요구패를 1장씩 들고 있는 상태(어떤 요구패로도 화료 가능)
         Tile kokushi13[13]={
             M1,M9,S1,S9,T1,T9,E,S,W,N,Wh,G,R //13종 각 1장
         };
-        CHECK(yokuMan::isKokushi(kokushi13,M1),"국사무쌍 13면대기: 화료패=M1이어도 국사무쌍");
-        CHECK(yokuMan::isKokushi(kokushi13,R),"국사무쌍 13면대기: 화료패=R이어도 국사무쌍(다른 패로도 화료 가능)");
+        CHECK(yakuMan::isKokushi(kokushi13,M1),"국사무쌍 13면대기: 화료패=M1이어도 국사무쌍");
+        CHECK(yakuMan::isKokushi(kokushi13,R),"국사무쌍 13면대기: 화료패=R이어도 국사무쌍(다른 패로도 화료 가능)");
         //요구패가 아닌 패로는 국사무쌍이 될 수 없음(13종은 다 있어도 짝이 안 생김)
-        CHECK(!yokuMan::isKokushi(kokushi13,M2),"화료패가 요구패가 아니면(M2) 국사무쌍 아님");
+        CHECK(!yakuMan::isKokushi(kokushi13,M2),"화료패가 요구패가 아니면(M2) 국사무쌍 아님");
         //화료패 값이 잘못된 경우
-        CHECK(!yokuMan::isKokushi(kokushi13,INVALID_TILE),"화료패 값이 잘못되면 국사무쌍 판정 실패");
+        CHECK(!yakuMan::isKokushi(kokushi13,INVALID_TILE),"화료패 값이 잘못되면 국사무쌍 판정 실패");
         //구련보등은 아직 화료패를 따로 받지 않으므로(헤더 미변경)기존처럼 14장으로 확인
         Tile chuuren[mahjong::HAND_MAX]={
             M1,M1,M1,M2,M3,M4,M5,M6,M7,M8,M9,M9,M9,M5 //1112345678999+5
         };
-        CHECK(yokuMan::isChuuren(chuuren),"구련보등 기본형 판정");
+        CHECK(yakuMan::isChuuren(chuuren),"구련보등 기본형 판정");
         Tile notChuuren[mahjong::HAND_MAX]={
             M1,M1,M1,M2,M3,M4,M5,M6,M7,M8,M9,M9,M9,S1 //혼일색 깨짐
         };
-        CHECK(!yokuMan::isChuuren(notChuuren),"타 수트 섞이면 구련보등 아님");
+        CHECK(!yakuMan::isChuuren(notChuuren),"타 수트 섞이면 구련보등 아님");
     }
     //-----------------------------------------------------------------
     SECTION("몸통 탐색 (find_dfs / findBestWin) 기본 동작");

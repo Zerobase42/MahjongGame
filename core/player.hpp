@@ -46,9 +46,9 @@ class Player{
     int calcFu()const{
         int score=20;//기본 20부 시작
         //기저사례 처리
-        if(tsumo&&yoku::isPinfu(handCard.card))//핑후면 20부 고정
+        if(tsumo&&yaku::isPinfu(handCard.card))//핑후면 20부 고정
             return 20;
-        if(yoku::isChiitoitsu(handCard.card))//치또이쯔면 25부 시작
+        if(yaku::isChiitoitsu(handCard.card))//치또이쯔면 25부 시작
             return 25;
         if(tsumo)//쯔모면+2
             score+=2;

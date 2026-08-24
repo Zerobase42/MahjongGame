@@ -190,7 +190,7 @@ namespace winChecker{//주어진 손패+화료패+멘츠 정보를 보고 화료
         //------------------------------------------------------------
         //치또이츠
         //------------------------------------------------------------
-        if(yoku::isChiitoitsu(sortedHand,winTile)){
+        if(yaku::isChiitoitsu(sortedHand,winTile)){
             scoreMask|=
                 static_cast<unsigned int>(
                     YokuMask::CHITOITSU);
@@ -198,7 +198,7 @@ namespace winChecker{//주어진 손패+화료패+멘츠 정보를 보고 화료
         //------------------------------------------------------------
         //국사무쌍
         //------------------------------------------------------------
-        if(yokuMan::isKokushi(sortedHand,winTile)){
+        if(yakuMan::isKokushi(sortedHand,winTile)){
             scoreMask|=
                 static_cast<unsigned int>(
                     YokuManMask::KOKUSHI);

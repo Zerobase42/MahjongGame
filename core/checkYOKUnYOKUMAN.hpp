@@ -2,7 +2,7 @@
 #ifndef CHECKYOKUNYOKUMAN_HPP
 #define CHECKYOKUNYOKUMAN_HPP
 #include "mahjong.hpp"
-namespace yoku{
+namespace yaku{
     //치또이츠:머리가 7개.
     bool isChiitoitsu(
         const mahjong::Tile handCard[13],
@@ -58,7 +58,7 @@ namespace yoku{
     }
 #endif
 }
-namespace yokuMan{
+namespace yakuMan{
         //국사무쌍:19패(각 수트 1,9)+자패 7종을 모두 1장 이상,그 중 1종류는 2장(페어)보유
     bool isKokushi(
         const mahjong::Tile handCard[13],
